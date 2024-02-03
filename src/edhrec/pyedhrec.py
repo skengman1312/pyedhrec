@@ -7,7 +7,7 @@ from .utils import get_random_ua
 
 
 class EDHRec:
-    def __init__(self, cookies=None):
+    def __init__(self, cookies: str = None):
         self.cookies = cookies
         self.session = requests.Session()
         if self.cookies:
@@ -25,7 +25,7 @@ class EDHRec:
         self._commander_data_cache = {}
 
     @staticmethod
-    def get_cookie_jar(cookie_str):
+    def get_cookie_jar(cookie_str: str):
         if cookie_str.startswith("userState="):
             cookie_str = cookie_str.split("userState=")[1]
 
@@ -36,7 +36,7 @@ class EDHRec:
         return cookie_jar
 
     @staticmethod
-    def format_card_name(card_name):
+    def format_card_name(card_name: str) -> str:
         # card names are all lower case
         card_name = card_name.lower()
         # Spaces need to be converted to underscores
@@ -47,7 +47,7 @@ class EDHRec:
         card_name = card_name.replace(",", "")
         return card_name
 
-    def _get(self, uri, query_params=None, return_type="json"):
+    def _get(self, uri: str, query_params: dict =None, return_type: str = "json") -> dict:
         res = self.session.get(uri, params=query_params)
         res.raise_for_status()
         if return_type == "json":
@@ -56,7 +56,7 @@ class EDHRec:
         else:
             return res.content
 
-    def get_build_id(self):
+    def get_build_id(self) -> str or None:
         home_page = self._get(self.base_url, return_type="raw")
         home_page_content = home_page.decode("utf-8")
         script_block_regex = r"<script id=\"__NEXT_DATA__\" type=\"application/json\">(.*)</script>"
@@ -79,7 +79,7 @@ class EDHRec:
         # We have a build ID set
         return True
 
-    def _build_nextjs_uri(self, endpoint, card_name, slug=None, theme=None, budget=None):
+    def _build_nextjs_uri(self, endpoint: str, card_name: str, slug: str = None, theme: str = None, budget: str = None):
         self.check_build_id()
         formatted_card_name = self.format_card_name(card_name)
         query_params = {
@@ -110,11 +110,11 @@ class EDHRec:
         return uri, query_params
 
     @staticmethod
-    def _get_nextjs_data(response):
+    def _get_nextjs_data(response: dict) -> dict:
         if "pageProps" in response:
             return response.get("pageProps", {}).get("data")
 
-    def _get_cardlist_from_container(self, card_name, tag=None):
+    def _get_cardlist_from_container(self, card_name: str, tag: str = None) -> dict:
         card_data = self.get_commander_data(card_name)
         container = card_data.get("container", {})
         json_dict = container.get("json_dict", {})
@@ -132,7 +132,7 @@ class EDHRec:
                 result[_header] = _card_list
         return result
 
-    def get_card_list(self, card_list):
+    def get_card_list(self, card_list: list) -> dict:
         uri = f"{self._api_base_url}/cards"
         req_body = {
             "format": "dict",
@@ -143,26 +143,26 @@ class EDHRec:
         res_json = res.json()
         return res_json
 
-    def get_card_link(self, card_name):
+    def get_card_link(self, card_name: str) -> str:
         formatted_card_name = self.format_card_name(card_name)
         uri = f"{self.base_url}/cards/{formatted_card_name}"
         return uri
 
     @card_detail_cache
-    def get_card_details(self, card_name):
+    def get_card_details(self, card_name: str) -> dict:
         formatted_card_name = self.format_card_name(card_name)
         uri = f"{self._json_base_url}/{formatted_card_name}"
         res = self._get(uri)
         return res
 
     @combo_cache
-    def get_card_combos(self, card_name):
+    def get_card_combos(self, card_name: str) -> dict:
         combo_uri, params = self._build_nextjs_uri("combos", card_name)
         res = self._get(combo_uri, query_params=params)
         data = self._get_nextjs_data(res)
         return data
 
-    def get_combo_url(self, combo_url):
+    def get_combo_url(self, combo_url: str) -> str:
         uri = f"{self.base_url}"
         if combo_url.startswith("/"):
             uri += combo_url
@@ -171,14 +171,14 @@ class EDHRec:
         return uri
 
     @commander_cache
-    def get_commander_data(self, card_name):
+    def get_commander_data(self, card_name: str) -> dict:
         commander_uri, params = self._build_nextjs_uri("commanders", card_name)
         res = self._get(commander_uri, query_params=params)
         data = self._get_nextjs_data(res)
         return data
 
     @average_deck_cache
-    def get_commanders_average_deck(self, card_name, budget=None):
+    def get_commanders_average_deck(self, card_name: str, budget: str = None) -> dict:
         average_deck_uri, params = self._build_nextjs_uri("average-decks", card_name, budget=budget)
         res = self._get(average_deck_uri, query_params=params)
         data = self._get_nextjs_data(res)
@@ -189,64 +189,64 @@ class EDHRec:
         return deck_obj
 
     @deck_cache
-    def get_commander_decks(self, card_name, budget=None):
+    def get_commander_decks(self, card_name: str, budget: str = None) -> dict:
         average_deck_uri, params = self._build_nextjs_uri("decks", card_name, budget=budget)
         res = self._get(average_deck_uri, query_params=params)
         data = self._get_nextjs_data(res)
         return data
 
-    def get_commander_cards(self, card_name):
+    def get_commander_cards(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name)
         return card_list
 
-    def get_new_cards(self, card_name):
+    def get_new_cards(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "newcards")
         return card_list
 
-    def get_high_synergy_cards(self, card_name):
+    def get_high_synergy_cards(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "highsynergycards")
         return card_list
 
-    def get_top_cards(self, card_name):
+    def get_top_cards(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "topcards")
         return card_list
 
-    def get_top_creatures(self, card_name):
+    def get_top_creatures(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "creatures")
         return card_list
 
-    def get_top_instants(self, card_name):
+    def get_top_instants(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "instants")
         return card_list
 
-    def get_top_sorceries(self, card_name):
+    def get_top_sorceries(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "sorceries")
         return card_list
 
-    def get_top_artifacts(self, card_name):
+    def get_top_artifacts(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "utilityartifacts")
         return card_list
 
-    def get_top_mana_artifacts(self, card_name):
+    def get_top_mana_artifacts(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "manaartifacts")
         return card_list
 
-    def get_top_enchantments(self, card_name):
+    def get_top_enchantments(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "enchantments")
         return card_list
 
-    def get_top_battles(self, card_name):
+    def get_top_battles(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "battles")
         return card_list
 
-    def get_top_planeswalkers(self, card_name):
+    def get_top_planeswalkers(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "planeswalkers")
         return card_list
 
-    def get_top_lands(self, card_name):
+    def get_top_lands(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "lands")
         return card_list
 
-    def get_top_utility_lands(self, card_name):
+    def get_top_utility_lands(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "utilitylands")
         return card_list

@@ -15,5 +15,5 @@ user_agents = [
 ]
 
 
-def get_random_ua():
+def get_random_ua() -> str:
     return random.choice(user_agents)
