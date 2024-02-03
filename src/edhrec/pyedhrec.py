@@ -1,6 +1,9 @@
+import datetime
 import json
 import re
 import requests
+
+from caching import commander_cache, card_detail_cache, combo_cache, average_deck_cache, deck_cache
 
 
 class EDHRec:
@@ -14,10 +17,12 @@ class EDHRec:
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
         }
         self.base_url = "https://edhrec.com"
-        self._json_base_url = "https://json.edhrec.com/cards/"
+        self._json_base_url = "https://json.edhrec.com/cards"
         self._api_base_url = f"{self.base_url}/api"
         self.default_build_id = "mI7k8IZ23x74LocK_h-qe"
         self.current_build_id = None
+
+        self._commander_data_cache = {}
 
     @staticmethod
     def get_cookie_jar(cookie_str):
@@ -109,6 +114,24 @@ class EDHRec:
         if "pageProps" in response:
             return response.get("pageProps", {}).get("data")
 
+    def _get_cardlist_from_container(self, card_name, tag=None):
+        card_data = self.get_commander_data(card_name)
+        container = card_data.get("container", {})
+        json_dict = container.get("json_dict", {})
+        card_lists = json_dict.get("cardlists")
+        result = {}
+        for cl in card_lists:
+            _card_list = cl.get("cardviews")
+            _header = cl.get("header")
+            _tag = cl.get("tag")
+            if tag:
+                if _tag == tag:
+                    result[_header] = _card_list
+                    return result
+            else:
+                result[_header] = _card_list
+        return result
+
     def get_card_list(self, card_list):
         uri = f"{self._api_base_url}/cards"
         req_body = {
@@ -120,12 +143,14 @@ class EDHRec:
         res_json = res.json()
         return res_json
 
+    @card_detail_cache
     def get_card_details(self, card_name):
         formatted_card_name = self.format_card_name(card_name)
         uri = f"{self._json_base_url}/{formatted_card_name}"
         res = self._get(uri)
         return res
 
+    @combo_cache
     def get_card_combos(self, card_name):
         combo_uri, params = self._build_nextjs_uri("combos", card_name)
         res = self._get(combo_uri, query_params=params)
@@ -134,32 +159,84 @@ class EDHRec:
 
     def get_combo_url(self, combo_url):
         uri = f"{self.base_url}"
-        if uri.startswith("/"):
+        if combo_url.startswith("/"):
             uri += combo_url
         else:
             uri += f"/{combo_url}"
-        res = self._get(uri)
-        return res
+        return uri
 
+    @commander_cache
     def get_commander_data(self, card_name):
         commander_uri, params = self._build_nextjs_uri("commanders", card_name)
         res = self._get(commander_uri, query_params=params)
         data = self._get_nextjs_data(res)
         return data
 
+    @average_deck_cache
     def get_commanders_average_deck(self, card_name, budget=None):
         average_deck_uri, params = self._build_nextjs_uri("average-decks", card_name, budget=budget)
         res = self._get(average_deck_uri, query_params=params)
         data = self._get_nextjs_data(res)
-        return data
+        deck_obj = {
+            "commander": card_name,
+            "decklist": data.get("deck")
+        }
+        return deck_obj
 
+    @deck_cache
     def get_commander_decks(self, card_name, budget=None):
         average_deck_uri, params = self._build_nextjs_uri("decks", card_name, budget=budget)
         res = self._get(average_deck_uri, query_params=params)
         data = self._get_nextjs_data(res)
         return data
 
-# edhrec = EDHRec()
+    def get_commander_cards(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name)
+        return card_list
+
+    def get_new_cards(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "newcards")
+        return card_list
+
+    def get_high_synergy_cards(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "highsynergycards")
+        return card_list
+
+    def get_top_cards(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "topcards")
+        return card_list
+
+    def get_top_creatures(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "creatures")
+        return card_list
+
+    def get_top_instants(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "instants")
+        return card_list
+
+    def get_top_sorceries(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "sorceries")
+        return card_list
+
+    def get_top_artifacts(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "utilityartifacts")
+        return card_list
+
+    def get_top_enchantments(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "enchantments")
+        return card_list
+
+
+edhrec = EDHRec()
+miirym = "Miirym, Sentinel Wyrm"
 # cl = edhrec.get_card_list(["pongify", "farseek"])
 # coms = edhrec.get_card_combos("Miirym, Sentinel Wyrm")
 # com_m = edhrec.get_combo_url('/combos/gur/380-703-2557')
+# avgd = edhrec.get_commanders_average_deck(miirym)
+cd = edhrec.get_commander_data(miirym)
+new = edhrec.get_commander_cards(miirym)
+new2 = edhrec.get_new_cards(miirym)
+detail_1 = edhrec.get_card_details(miirym)
+detail_2 = edhrec.get_card_details(miirym)
+detail_3 = edhrec.get_card_details(miirym)
+print(detail_3)

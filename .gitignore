@@ -1,0 +1,9 @@
+.idea/
+.vscode/
+
+dist/
+src/pyedhrec.egg-info
+__pycache__/
+
+# Ignore file used for testing functionality
+testing.py

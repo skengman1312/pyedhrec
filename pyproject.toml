@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyedhrec"
+version = "0.0.1"
+authors = [
+  { name="Stainedhat", email="stainedhat@gmail.com" },
+]
+description = "A simple package to interact with the excellent EDHRec site for Magic the Gathering"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License :: 2.0",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "requests",
+]
+keywords = ["magic", "mtg", "edhrec", "magic the gathering", "edh"]
+
+[project.urls]
+Homepage = "https://github.com/stainedhat/pyedhrec"
+Issues = "https://github.com/stainedhat/pyedhrec/issues"
