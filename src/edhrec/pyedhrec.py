@@ -1,9 +1,9 @@
-import datetime
 import json
 import re
 import requests
 
-from caching import commander_cache, card_detail_cache, combo_cache, average_deck_cache, deck_cache
+from .caching import commander_cache, card_detail_cache, combo_cache, average_deck_cache, deck_cache
+from .utils import get_random_ua
 
 
 class EDHRec:
@@ -14,7 +14,7 @@ class EDHRec:
             self.session.cookies = self.get_cookie_jar(cookies)
         self.session.headers = {
             "Accept": "application/json",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
+            "User-Agent": get_random_ua()
         }
         self.base_url = "https://edhrec.com"
         self._json_base_url = "https://json.edhrec.com/cards"
@@ -143,6 +143,11 @@ class EDHRec:
         res_json = res.json()
         return res_json
 
+    def get_card_link(self, card_name):
+        formatted_card_name = self.format_card_name(card_name)
+        uri = f"{self.base_url}/cards/{formatted_card_name}"
+        return uri
+
     @card_detail_cache
     def get_card_details(self, card_name):
         formatted_card_name = self.format_card_name(card_name)
@@ -222,21 +227,26 @@ class EDHRec:
         card_list = self._get_cardlist_from_container(card_name, "utilityartifacts")
         return card_list
 
+    def get_top_mana_artifacts(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "manaartifacts")
+        return card_list
+
     def get_top_enchantments(self, card_name):
         card_list = self._get_cardlist_from_container(card_name, "enchantments")
         return card_list
 
+    def get_top_battles(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "battles")
+        return card_list
 
-edhrec = EDHRec()
-miirym = "Miirym, Sentinel Wyrm"
-# cl = edhrec.get_card_list(["pongify", "farseek"])
-# coms = edhrec.get_card_combos("Miirym, Sentinel Wyrm")
-# com_m = edhrec.get_combo_url('/combos/gur/380-703-2557')
-# avgd = edhrec.get_commanders_average_deck(miirym)
-cd = edhrec.get_commander_data(miirym)
-new = edhrec.get_commander_cards(miirym)
-new2 = edhrec.get_new_cards(miirym)
-detail_1 = edhrec.get_card_details(miirym)
-detail_2 = edhrec.get_card_details(miirym)
-detail_3 = edhrec.get_card_details(miirym)
-print(detail_3)
+    def get_top_planeswalkers(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "planeswalkers")
+        return card_list
+
+    def get_top_lands(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "lands")
+        return card_list
+
+    def get_top_utility_lands(self, card_name):
+        card_list = self._get_cardlist_from_container(card_name, "utilitylands")
+        return card_list
