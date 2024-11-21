@@ -250,3 +250,11 @@ class EDHRec:
     def get_top_utility_lands(self, card_name: str) -> dict:
         card_list = self._get_cardlist_from_container(card_name, "utilitylands")
         return card_list
+
+    def get_deck_by_id(self, id):
+        deck_by_id_uri, params = self._build_nextjs_uri("deckpreview", id)
+        deck_by_id_uri = deck_by_id_uri.replace(self.format_card_name(id), id)
+        res = self._get(deck_by_id_uri, query_params=params)
+        data = self._get_nextjs_data(res)
+        return data
+
