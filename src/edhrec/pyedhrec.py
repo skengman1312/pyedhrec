@@ -47,7 +47,7 @@ class EDHRec:
         card_name = card_name.replace(",", "")
         return card_name
 
-    def _get(self, uri: str, query_params: dict =None, return_type: str = "json") -> dict:
+    def _get(self, uri: str, query_params: dict = None, return_type: str = "json") -> dict:
         res = self.session.get(uri, params=query_params)
         res.raise_for_status()
         if return_type == "json":
@@ -251,10 +251,27 @@ class EDHRec:
         card_list = self._get_cardlist_from_container(card_name, "utilitylands")
         return card_list
 
-    def get_deck_by_id(self, id):
+    def get_deck_by_id(self, id: str, simplified_output: bool = False) -> dict:
+        """
+        Fetch full deck list from EDHREC id/urlhash using the "deckpreview" endpoint
+        :param id: id/urlhash of the deck of interest
+        :param simplified_output: if true the response is parsed into a eye-readable dict
+        :return:
+        """
         deck_by_id_uri, params = self._build_nextjs_uri("deckpreview", id)
         deck_by_id_uri = deck_by_id_uri.replace(self.format_card_name(id), id)
         res = self._get(deck_by_id_uri, query_params=params)
         data = self._get_nextjs_data(res)
-        return data
+        if not simplified_output:
+            return data
+        else:
+            return {**{"Commander": [cm for cm in data["commanders"] if cm is not None]},
+                   **{cl["header"]: [card["name"] for card in cl["cardviews"]]
+                    for cl in data["container"]["json_dict"]["cardlists"]}}
+
+    def get_commander_decklists(self, card_name: str, budget: str = None) -> dict:
+        decklists_container = self.get_commander_decks(card_name, budget)["table"]
+        for dl in decklists_container:
+            hash = dl["urlhash"]
+            yield self.get_deck_by_id(hash, simplified_output=True)
 
