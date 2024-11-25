@@ -288,7 +288,6 @@ class EDHRec:
         res = self._get(top_commanders_uri, query_params=params)
         data = self._get_nextjs_data(res)
         cardlist = data["container"]["json_dict"]["cardlists"][0]
-        # print(len(data["container"]["json_dict"]["cardlists"][0]["cardviews"]))
         for i in range(n):
             local_index, global_index = i % 100, i // 100
             if (local_index == 0) and (global_index != 0):
@@ -296,10 +295,7 @@ class EDHRec:
                 top_commanders_uri = top_commanders_uri[:replace_index] + cardlist["more"]
                 res = self._get(top_commanders_uri)
                 cardlist = self._get_nextjs_data(res)
-            yield cardlist["cardviews"][local_index]["name"]  # , data
-
-        # return data
-        # https: // edhrec.com / _next / data / lIhytebIvWgHKzJgHnn1i / commanders.json
+            yield cardlist["cardviews"][local_index]["name"]
 
     def get_top_commanders_by_timeframe(self, time_frame: str = "", n: int = 100):
         """
@@ -333,41 +329,3 @@ class EDHRec:
         query = archetype
         for i in self._get_top_commanders(query=query, n=n):
             yield i
-
-    # def get_top_commanders(self, time_frame="",colors = [],  n=100):
-    #
-    #     color_archetypes = {'w': 'mono-white', 'u': 'mono-blue', 'b': 'mono-black', 'r': 'mono-red', 'g': 'mono-green',
-    #                         'c': 'colorless', 'uw': 'azorius', 'bu': 'dimir', 'br': 'rakdos', 'gr': 'gruul',
-    #                         'gw': 'selesnya', 'bw': 'orzhov', 'ru': 'izzet', 'bg': 'golgari', 'rw': 'boros',
-    #                         'gu': 'simic', 'buw': 'esper', 'bru': 'grixis', 'bgr': 'jund', 'grw': 'naya', 'guw': 'bant',
-    #                         'bgw': 'abzan', 'ruw': 'jeskai', 'bgu': 'sultai', 'brw': 'mardu', 'gru': 'temur',
-    #                         'bruw': 'yore-tiller', 'bgru': 'glint-eye', 'bgrw': 'dune-brood', 'gruw': 'ink-treader',
-    #                         'bguw': 'witch-maw', 'bgruw': 'five-color'} # need to find a better way
-    #
-    #     assert time_frame in (
-    #         "week", "month", ""), "The available time frames are week and month, leave empty for all times"
-    #     if len(colors) > 0:
-    #         color_sting = "".join(sorted(colors))
-    #         archetype = color_archetypes[color_sting]
-    #         query = archetype
-    #     else:
-    #         query = time_frame
-    #     top_commanders_uri, params = self._build_nextjs_uri("commanders", query)
-    #     if time_frame == "" and len(colors) == 0:
-    #         top_commanders_uri = top_commanders_uri.replace("commanders/.json", "commanders.json")
-    #
-    #     res = self._get(top_commanders_uri, query_params=params)
-    #     data = self._get_nextjs_data(res)
-    #     cardlist = data["container"]["json_dict"]["cardlists"][0]
-    #     # print(len(data["container"]["json_dict"]["cardlists"][0]["cardviews"]))
-    #     for i in range(n):
-    #         local_index, global_index = i % 100, i // 100
-    #         if (local_index == 0) and (global_index != 0):
-    #             replace_index = top_commanders_uri.find("commander")
-    #             top_commanders_uri = top_commanders_uri[:replace_index]+cardlist["more"]
-    #             res = self._get(top_commanders_uri)
-    #             cardlist = self._get_nextjs_data(res)
-    #         yield cardlist["cardviews"][local_index]["name"]# , data
-    #
-    #     # return data
-    #     # https: // edhrec.com / _next / data / lIhytebIvWgHKzJgHnn1i / commanders.json
