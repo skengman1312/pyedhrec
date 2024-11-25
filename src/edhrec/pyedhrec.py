@@ -255,7 +255,7 @@ class EDHRec:
         """
         Fetch full deck list from EDHREC id/urlhash using the "deckpreview" endpoint
         :param id: id/urlhash of the deck of interest
-        :param simplified_output: if true the response is parsed into a eye-readable dict
+        :param simplified_output: if true the response is parsed into an eye-readable dict
         :return:
         """
         deck_by_id_uri, params = self._build_nextjs_uri("deckpreview", id)
@@ -266,10 +266,15 @@ class EDHRec:
             return data
         else:
             return {**{"Commander": [cm for cm in data["commanders"] if cm is not None]},
-                   **{cl["header"]: [card["name"] for card in cl["cardviews"]]
-                    for cl in data["container"]["json_dict"]["cardlists"]}}
+                    **{cl["header"]: [card["name"] for card in cl["cardviews"]]
+                       for cl in data["container"]["json_dict"]["cardlists"]}}
 
     def get_commander_decklists(self, card_name: str, budget: str = None) -> dict:
+        """
+        Generator of top deck lists for card_name commander, each iteration is a single request
+        :param card_name:
+        :param budget:
+        """
         decklists_container = self.get_commander_decks(card_name, budget)["table"]
         for dl in decklists_container:
             hash = dl["urlhash"]
