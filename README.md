@@ -64,6 +64,25 @@ top_planeswalkers = edhrec.get_top_planeswalkers(miirym)
 top_utility_lands = edhrec.get_top_utility_lands(miirym)
 top_lands = edhrec.get_top_lands(miirym)
 
+# Iterate over known decklists for a commander
+for list in edhrec.get_commander_decklists(miirym):
+    next_deck = list
+
+# All known decklists for a commander 
+all = list(edhrec.get_commander_decklists(miirym))
+
+# Get top commanders by timeframe as generator (default number is 100)
+week = edhrec.get_top_commanders_by_timeframe(time_frame="week")
+all_times = edhrec.get_top_commanders_by_timeframe()
+
+# Get top commanders by color identity as generator (default number is 100)
+mono_white = edhrec.get_top_commanders_by_color(colors=["w"])
+colorless = edhrec.get_top_commanders_by_color(colors=["c"])
+simic = edhrec.get_top_commanders_by_color(colors=["u", "g"])
+izzet = edhrec.get_top_commanders_by_color(colors=["u", "r"])
+esper = edhrec.get_top_commanders_by_color(colors=["u", "w", "b"])
+five_colors = edhrec.get_top_commanders_by_color(colors=["u", "w", "b", "g", "r"])
+
 ```
 
 ## Caching
