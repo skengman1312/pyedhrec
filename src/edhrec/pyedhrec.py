@@ -278,7 +278,10 @@ class EDHRec:
         decklists_container = self.get_commander_decks(card_name, budget)["table"]
         for dl in decklists_container:
             hash = dl["urlhash"]
-            yield self.get_deck_by_id(hash, simplified_output=True)
+            try:
+                yield self.get_deck_by_id(hash, simplified_output=True)
+            except requests.exceptions.HTTPError:
+                pass
 
     def _get_top_commanders(self, query: str, n: int = 100):
         top_commanders_uri, params = self._build_nextjs_uri("commanders", query)
