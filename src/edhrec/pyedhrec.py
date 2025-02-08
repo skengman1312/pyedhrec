@@ -115,7 +115,7 @@ class EDHRec:
             return response.get("pageProps", {}).get("data")
 
     def _get_cardlist_from_container(self, card_name: str, tag: str = None) -> dict:
-        card_data = self.get_commander_data(card_name)
+        card_data = self.get_card_data(card_name)
         container = card_data.get("container", {})
         json_dict = container.get("json_dict", {})
         card_lists = json_dict.get("cardlists")
@@ -173,6 +173,12 @@ class EDHRec:
     @commander_cache
     def get_commander_data(self, card_name: str) -> dict:
         commander_uri, params = self._build_nextjs_uri("commanders", card_name)
+        res = self._get(commander_uri, query_params=params)
+        data = self._get_nextjs_data(res)
+        return data
+
+    def get_card_data(self, card_name: str) -> dict:
+        commander_uri, params = self._build_nextjs_uri("cards", card_name)
         res = self._get(commander_uri, query_params=params)
         data = self._get_nextjs_data(res)
         return data
